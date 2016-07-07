@@ -1,0 +1,153 @@
+Introduction
+
+This article explains the use of JSON in WCF and AJAX-enabled WCF services.
+
+Description
+
+WCF is capable of sending messages in XML format or JSON formats. JSON format has a much more compact presentation than XML and is highly used today in web applications that use AJAX asynchronous style of communications. Each of WCF's message formats is independent of the response. WCF message has two properties.
+
+RequestFormat
+ResponseFormat
+webmessageformat
+
+WebMessageFormat.Json specifies that the message response format we want is JSON. By default it is XML. We can integrate AJAX-enabled services via JSON.
+
+JSON 
+
+The JavaScript Object Notation (JSON) format is suitable for creating JavaScript objects. Today most of the browser-based application WCF services can be consumed by JavaScript or jQuery. WCF must send the response in JSON object. To establish the communication between JavaScript or jQuery and the service we mainly use JSON. It helps in data serialization and deserialization. We can be configure this setting in WebGet or WebInvoke attribute. In JSON one does not need to create lengthy tags like XML, hence it is lighter than XML. It is language-independent and produces clean and readable data.
+
+AJAX-enabled WCF Service
+
+This is a service that can be called from an ajax client-side script. It returns JSON wrapped objects to the browser through a JavaScript call. Here we don't need the code behind to call it. That means we can call the WCF directly instead of having to go to the WebFrom.aspx.cs or VB codebehind file to make the call to the WCF Web service.
+
+Let's see a demo of this type of service and compare this with a WCF REST service.
+
+Step 1
+
+asp dot net web form application
+
+Open Visual Studio 2012 then selelct "File" -> "New" -> "Project...". We will then get the following Image. From the template choose Visual C# then choose Web. Then select the ASP.NET Web Forms Application. Let's give the project the name AjaxEnabledWCFDemo, then click the OK button to go to the next step. 
+
+Step 2
+
+Right-click on the project and click on the add new item. We will get the following image. Then choose Web then choose AJAX -enabled WCF Service. Then provide the name to your service. I have given it the name AjaxService.svc. Then click the Add button. 
+
+ajax enable wcf service
+
+Step 3
+
+If we look into the References then we can see that System.ServiceModel is automatically added to the project. In the AjaxService.svc class I will add a class Student. I want to send the list of this class to the client side.
+
+This is my class.
+
+public class Student  
+{  
+      public int Id { get; set; }  
+      public string Name { get; set; }  
+      public int Mark { get; set; }  
+      public string Grade { get; set; }  
+}  
+I will write the following function that will send the student details in the form of a list to the client side.
+/// <summary>  
+/// This function returns the list of student data.  
+/// </summary>  
+/// <returns></returns>  
+        [OperationContract]  
+        [WebInvoke(Method = "GET",  
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,  
+            ResponseFormat = WebMessageFormat.Json  
+         )]  
+        public List<Student> getStudentData()  
+        {  
+            try  
+            {  
+                List<Student> lstStudent = new List<Student>();  
+  
+                Student oStudent = new Student();  
+                oStudent.Id = 1;  
+                oStudent.Name = "Shashank";  
+                oStudent.Mark = 100;  
+                oStudent.Grade = "O";  
+                lstStudent.Add(oStudent);  
+  
+                Student oStudent1 = new Student();  
+                oStudent1.Id = 2;  
+                oStudent1.Name = "Syam";  
+                oStudent1.Mark = 90;  
+                oStudent1.Grade = "A";  
+                lstStudent.Add(oStudent1);  
+  
+                Student oStudent2 = new Student();  
+                oStudent2.Id = 3;  
+                oStudent2.Name = "Ram";  
+                oStudent2.Mark = 80;  
+                oStudent2.Grade = "B";  
+                lstStudent.Add(oStudent2);  
+                return lstStudent;  
+            }  
+            catch (Exception ex)  
+            {  
+                throw new FaultException<string>  
+                (ex.Message);    
+            }  
+  
+        }  
+In the preceding function I have used the WebInvoke attribute. The ResponseFormat is JSON. 
+
+Step 4
+
+In the Default.aspx page, I have added the following code snippets. I am calling the ajax-enabled service from the UI using jQuery. I am binding the student data in a HTML table.
+<asp:Content runat="server" ID="FeaturedContent" ContentPlaceHolderID="FeaturedContent">  
+    <script src="Scripts/jquery-1.8.2.min.js"></script>  
+    <script type="text/javascript" >  
+        $(document).ready(function () {             
+            $.ajax({  
+                url: "/AjaxService.svc/getStudentData",  
+                dataType: "json",  
+                type: "GET",                
+                contentType: "application/json; charset=utf-8",  
+                success: function (data) {  
+                    if (data.d != null) {  
+                        var dtStudent = data.d;                         
+                        var html = "<table style='width:50%' align='center' bgcolor='#FFFF' border=1><th>ID</th><th>Name</th><th>Mark</th><th>Grade</th>";  
+                        for (i = 0; i < dtStudent.length; i++)  
+                        {  
+                            html += "<tr><td>" + dtStudent[i].Id + "</td><td>" + dtStudent[i].Name + "</td><td>" + dtStudent[i].Mark + "</td><td>" + dtStudent[i].Grade + "</td></tr>";  
+                        }                      
+                        html += "</table>";  
+                        $("#divStudent").html(html);  
+                    }  
+                },  
+                error: function (d) {  
+                    alert("Error");  
+                }  
+            });  
+        });  
+    </script>  
+</asp:Content>  
+<asp:Content runat="server" ID="BodyContent" ContentPlaceHolderID="MainContent">  
+   <div id="divStudent"></div>  
+</asp:Content>  
+Note : Let's look into the web config file.
+<system.serviceModel>  
+    <behaviors>  
+      <endpointBehaviors>  
+        <behavior name="AjaxEnabledWCFDemo.AjaxServiceAspNetAjaxBehavior">  
+          <enableWebScript />  
+        </behavior>  
+      </endpointBehaviors>  
+    </behaviors>  
+    <serviceHostingEnvironment aspNetCompatibilityEnabled="true"  
+      multipleSiteBindingsEnabled="true" />  
+    <services>  
+      <service name="AjaxEnabledWCFDemo.AjaxService">  
+        <endpoint address="" behaviorConfiguration="AjaxEnabledWCFDemo.AjaxServiceAspNetAjaxBehavior"  
+          binding="webHttpBinding" contract="AjaxEnabledWCFDemo.AjaxService" />  
+      </service>  
+    </services>  
+  </system.serviceModel>  
+We need the end point and set the service behavior in the config file. While we have done the REST demo, I have added the end point behaviors manually in the config file. But if we are using the ajax-enabled services then the code above is automatically added to the config file. It is an advantage of ajax-enabled services over REST services.
+
+Step 5
+
+As I have called the service in the document.ready of the Default page, when we browse the page we will get the following result.
