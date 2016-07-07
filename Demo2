@@ -1,0 +1,256 @@
+Background
+
+This article explains the Ajax Enabled WCF service to create an Ajax Enabled WCF service. Visual Studio provides by default a template for that. So let us learn step-by-step about the Ajax Enabled WCF service so beginners also can understand. 
+ 
+Requirements to understand this tutorial 
+ 
+If you are a beginner and need to understand what a WCF service is, refer to the following article of mine:
+Creating WCF Service
+I hope you read it if you are unfamiliar with WCF services, so I will briefly define what a WCF service.
+
+
+Windows Communication Foundation (WCF)
+ 
+WCF is a library for applications of various platforms or the same platform to communicate over the various protocols such as TCP, HTTP, HTTPS and so on.
+
+Now the next requirement is for you to at least be aware of Ajax. If you are unfamiliar with Ajax then please refer to the following article of mine:
+ Introduction to Ajax and Ajax Control Toolkit
+I hope you have read it. Now let us see about Ajax Enabled WCF Services.
+
+What is Ajax Enabled Services? 
+
+An Ajax Enabled Service is a template in Visual Studio that provides a configuration by default to consume a WCF service using Ajax and jQuery. So let us demonstrate this concept with a web application. 
+
+Step 1
+ 
+Create a WCF Service as in the following:
+"Start" - "All Programs" - "Microsoft Visual Studio 2010".
+
+"File" - "New WebSite" - "C#" - "ASP.NET Empty Web Application" (to avoid adding a master page).
+
+Provide the web site a name such as "AjaxEnabledWCFServiceApplication" or another as you wish and specify the location.
+
+Then right-click on Solution Explorer - "Add New Item". You will see the Ajax Enabled WCF service template as same as the following image,
+ajax enable wcf service
+
+Now click on "Add". The Solution Explorer will then look as in the following:
+ 
+ 
+ 
+Step 2
+
+Add a web page to the new web application as in the following:
+Right-click on Solution Explorer then select "Add New Item". You will see the Web Form  template then click on Add.
+
+Now drag and drop one Input Button, a Text Box to the Default.aspx Page. Then the source code of the Default.aspx page will look as follows:
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="_Default" %>  
+  
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">  
+<html xmlns="http://www.w3.org/1999/xhtml">  
+<head runat="server">  
+    <title></title>  
+    <script src="Scripts/jquery-1.4.1.min.js" type="text/javascript"></script>  
+    
+  
+</head>  
+<body bgcolor="black">  
+    <form id="form1" runat="server">  
+    <br />      
+    <br />      
+    <br />    
+    <table style="color: White;">  
+        <tr>  
+            <td>  
+                Enter Number  
+            </td>  
+            <td>  
+                <input type="text" id="txtgetMulti" />  
+            </td>  
+        </tr>  
+        <tr>  
+            <td>  
+            </td>  
+            <td>  
+                <input id="btnGetMulti" type="button" value="Get Result" />  
+            </td>  
+        </tr>  
+    </table>  
+      
+    </form>  
+</body>  
+</html>  
+Step 3
+
+Create a method in the Service.svc file as in the following:
+public class Service  
+{  
+   
+        [OperationContract]  
+        [System.ServiceModel.Web.WebInvoke(Method = "POST", ResponseFormat = WebMessageFormat.Json)]  
+        public int Multiplication(int Number)
+        {  
+            return Number*Number;  
+  
+        }  
+}  
+ Step 4
+
+
+To allow calling a WCF service from JavaScript, jQuery or ScriptManager, we need to add the following line at the top of the class name. We also need to specify the namespace. The namespace may be any name used to uniquely identify the service as in the following:
+[ServiceContract(Namespace = "Multiplication")]  
+ [AspNetCompatibilityRequirements(RequirementsMode=AspNetCompatibilityRequirementsMode.Allowed)] 
+After adding the preceding line, the Service class will look as follows:
+[ServiceContract(Namespace = "Multiplication")]  
+[AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]  
+public class Service  
+{  
+   
+        [OperationContract]  
+        [System.ServiceModel.Web.WebInvoke(Method = "POST", ResponseFormat = WebMessageFormat.Json)]  
+        public int Multiplication(int Number)  
+        {  
+            return Number*Number;  
+  
+        }  
+}  
+Step 5
+
+Let us see the UI of the .aspx page:
+ 
+
+ 
+In the preceding UI you saw that there is a TextBox that accepts integer type numbers and there is the Get Result HTML button that calls the jQuery function to call the WCF  Method.
+ 
+Step 6
+
+Refer to the jQuery library script Path file as in the following:
+<script src="Scripts/jquery-1.4.1.min.js" type="text/javascript"></script>  
+ Now see the  the Web.config file configuration as follows:
+<system.serviceModel>  
+    <behaviors>  
+      <endpointBehaviors>  
+        <behavior name="ServiceAspNetAjaxBehavior">  
+          <enableWebScript/>  
+        </behavior>  
+      </endpointBehaviors>  
+    </behaviors>  
+    <serviceHostingEnvironment aspNetCompatibilityEnabled="true" multipleSiteBindingsEnabled="true"/>  
+    <services>  
+      <service name="Service">  
+        <endpoint address="" behaviorConfiguration="ServiceAspNetAjaxBehavior" binding="webHttpBinding" contract="Service"/>  
+      </service>  
+    </services>  
+  </system.serviceModel>  
+Step 7
+
+Create a jQuery function to call the service method using JSON as in the following:
+$("#btnGetMulti").live("click", function () {  
+            $.ajax({  
+                type: "POST",  
+                contentType: "application/json; charset=utf-8",  
+                url: 'Service.svc/GetMultiplication',  
+                data: '{"Number": "' + $("#txtgetMulti").val() + '"}',  
+                processData: true,  
+                dataType: "json",  
+                success: function (response) {  
+                      
+                    alert(response.d);  
+                },  
+                error: function (errormsg)   
+                {  
+                    alert(errormsg.responseText);  
+                }  
+            });  
+        });  
+In the preceding function we are ing the input value to the server method using JSON and displaying the response in an alert box. The entire source code will look as follows:
+ 
+ Default.aspx
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="_Default" %>  
+  
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">  
+<html xmlns="http://www.w3.org/1999/xhtml">  
+<head runat="server">  
+    <title></title>  
+    <script src="Scripts/jquery-1.4.1.min.js" type="text/javascript"></script>  
+    <script type="text/javascript">  
+        $("#btnGetMulti").live("click", function () {  
+            $.ajax({  
+                type: "POST",  
+                contentType: "application/json; charset=utf-8",  
+                url: 'Service.svc/GetMultiplication',  
+                data: '{"Number": "' + $("#txtgetMulti").val() + '"}',  
+                processData: true,  
+                dataType: "json",  
+                success: function (response) {  
+                      
+                    alert(response.d);  
+                },  
+                error: function (errormsg)   
+                {  
+                    alert(errormsg.responseText);  
+                }  
+            });  
+        });  
+    </script>  
+  
+</head>  
+<body bgcolor="black">  
+    <form id="form1" runat="server">  
+    <br />      
+    <br />      
+    <br />    
+    <table style="color: White;">  
+        <tr>  
+            <td>  
+                Enter Number  
+            </td>  
+            <td>  
+                <input type="text" id="txtgetMulti" />  
+            </td>  
+        </tr>  
+        <tr>  
+            <td>  
+            </td>  
+            <td>  
+                <input id="btnGetMulti" type="button" value="Get Result" />  
+            </td>  
+        </tr>  
+    </table>  
+      
+    </form>  
+</body>  
+</html>  
+ Service.cs
+using System;  
+using System.Collections.Generic;  
+using System.Linq;  
+using System.Runtime.Serialization;  
+using System.ServiceModel;  
+using System.ServiceModel.Activation;  
+using System.ServiceModel.Web;  
+using System.Text;  
+  
+[ServiceContract(Namespace = "Multiplication")]  
+[AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]  
+public class Service  
+{  
+   
+        [OperationContract]  
+        [System.ServiceModel.Web.WebInvoke(Method = "POST", ResponseFormat = WebMessageFormat.Json)]  
+        public int GetMultiplication(int  Number)  
+        {  
+            return Number*Number;  
+  
+        }  
+}  
+Now click F5 to run the application. Enter a number into the TextBox and click on the Get Result button, it will show the following output:
+ 
+ 
+ 
+In the preceding image the output is returned from the WCF service as 1000.
+Notes
+For detailed code please download the Zip file attached above.
+Don't forget to refer to the jQuery Script file Reference.
+Summary
+
+From all the examples above we have learned what an Ajax Enabled WCF service is and how to call a service using JSON. I hope this article is useful for all students and beginners. If you have any suggestion related to this article then please contact me. 
